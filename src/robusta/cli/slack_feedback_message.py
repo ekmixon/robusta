@@ -69,7 +69,14 @@ class SlackFeedbackMessagesSender(object):
 
     @staticmethod
     def _gen_robusta_slack_message(title: str, other_sections: list[str]):
-        blocks = [
+        additional_blocks = [{
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": message
+            },
+        } for message in other_sections]
+        return [
             {
                 "type": "header",
                 "text": {
@@ -78,13 +85,5 @@ class SlackFeedbackMessagesSender(object):
                     "emoji": True,
                 },
             },
+            *additional_blocks,
         ]
-        additional_blocks = [{
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": message
-            },
-        } for message in other_sections]
-        blocks.extend(additional_blocks)
-        return blocks

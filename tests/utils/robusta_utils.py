@@ -55,7 +55,7 @@ class RobustaController:
             time.sleep(5)
         details = self._run_cmd(["kubectl", "describe", "pods"])
         logging.error(f"robusta runner did not start. logs={logs}; details={details}")
-        raise Exception(f"robusta runner did not start")
+        raise Exception("robusta runner did not start")
 
     def get_logs(self):
         return self._run_cmd(
@@ -96,11 +96,7 @@ class RobustaController:
     def _run_cmd(cmd) -> str:
         env = os.environ.copy()
 
-        # in windows we need to set shell=True or else PATH is ignored and subprocess.run can't find poetry
-        shell = False
-        if os.name == "nt":
-            shell = True
-
+        shell = os.name == "nt"
         result = subprocess.run(
             cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell
         )

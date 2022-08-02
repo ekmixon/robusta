@@ -58,13 +58,11 @@ class PrometheusAlertTrigger(BaseTrigger):
         if not prefix_match(self.pod_name_prefix, labels.get("pod")):
             return False
 
-        if not prefix_match(self.namespace_prefix, labels.get("namespace")):
-            return False
-
-        if not prefix_match(self.instance_name_prefix, labels.get("instance")):
-            return False
-
-        return True
+        return (
+            bool(prefix_match(self.instance_name_prefix, labels.get("instance")))
+            if prefix_match(self.namespace_prefix, labels.get("namespace"))
+            else False
+        )
 
     @classmethod
     def __find_node_by_ip(cls, ip) -> Optional[Node]:

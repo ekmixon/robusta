@@ -105,10 +105,7 @@ class GitRepo:
         GitRepo.initialized = True
 
     def __exec_git_cmd(self, cmd: List[str]):
-        shell = False
-        if os.name == "nt":
-            shell = True
-
+        shell = os.name == "nt"
         result = subprocess.run(
             cmd,
             cwd=self.repo_local_path,

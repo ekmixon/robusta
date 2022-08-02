@@ -80,14 +80,15 @@ LOADERS_MAPPINGS = {
 class ResourceLoader:
     @staticmethod
     def read_resource(kind: str, name: str, namespace: str = None) -> Response:
-        resource_mapper = LOADERS_MAPPINGS[kind.lower()]
-        if not resource_mapper:
-            raise Exception("resource loader not found")
+        if resource_mapper := LOADERS_MAPPINGS[kind.lower()]:
+            return (
+                resource_mapper[1](name=name, namespace=namespace)
+                if resource_mapper[0]
+                else resource_mapper[1](name=name)
+            )
 
-        if resource_mapper[0]:  # namespaced resource
-            return resource_mapper[1](name=name, namespace=namespace)
         else:
-            return resource_mapper[1](name=name)
+            raise Exception("resource loader not found")
 
 
 class ResourceAttributes(ExecutionEventBaseParams):

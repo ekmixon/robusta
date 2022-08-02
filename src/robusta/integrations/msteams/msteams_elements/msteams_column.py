@@ -33,7 +33,7 @@ class MsTeamsColumn(MsTeamsBase):
         if key is not None:
             block["id"] = key
         if action is not None:
-            block.update(action.get_map_value())
+            block |= action.get_map_value()
 
         self.column_list.append(block)
 

@@ -29,12 +29,12 @@ def main():
             registry= registry,
             )
     else:
-        logging.info(f"Telemetry is disabled.")
+        logging.info("Telemetry is disabled.")
 
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))
 
-    
+
     Web.init(event_handler, loader)
     Web.run()  # blocking
     loader.close()

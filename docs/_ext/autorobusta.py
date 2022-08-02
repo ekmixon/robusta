@@ -72,11 +72,11 @@ class PydanticModelDirective(SphinxDirective):
         required_fields = list(filter(lambda f: f.required, all_fields))
         optional_fields = list(filter(lambda f: not f.required, all_fields))
 
-        if not show_optionality and len(required_fields) > 0:
+        if not show_optionality and required_fields:
             node.append(nodes.strong(text="required:"))
         node.extend(cls.__document_fields(required_fields, show_code, show_optionality))
 
-        if not show_optionality and len(optional_fields) > 0:
+        if not show_optionality and optional_fields:
             node.append(nodes.strong(text="optional:"))
         node.extend(cls.__document_fields(optional_fields, show_code, show_optionality))
 
@@ -137,7 +137,7 @@ class PydanticModelDirective(SphinxDirective):
 
         if typing.get_origin(field.type_) == typing.Union:
             possible_types = get_possible_types(field.type_)
-            paragraph = nodes.paragraph(text=f"each entry is one of the following:")
+            paragraph = nodes.paragraph(text="each entry is one of the following:")
             content.append(paragraph)
             for t in possible_types:
                 if isinstance(None, t):
@@ -145,7 +145,7 @@ class PydanticModelDirective(SphinxDirective):
                 content.extend(cls.__document_model(t, show_code, show_optionality))
 
         elif issubclass(field.type_, BaseModel):
-            paragraph = nodes.paragraph(text=f"each entry contains:")
+            paragraph = nodes.paragraph(text="each entry contains:")
             content.append(paragraph)
             # when documenting an inner model, we always show "required"/"optional" inline
             content.extend(
@@ -220,10 +220,7 @@ class RobustaActionDirective(SphinxDirective):
 
     def run(self) -> List[Node]:
         objpath = self.arguments[0]
-        if len(self.arguments) < 2:
-            recommended_trigger = None
-        else:
-            recommended_trigger = self.arguments[1]
+        recommended_trigger = None if len(self.arguments) < 2 else self.arguments[1]
         obj = pydoc.locate(objpath)
         if obj is None:
             raise Exception(f"Cannot document None: {objpath}")
@@ -289,12 +286,13 @@ class RobustaActionDirective(SphinxDirective):
                         
                     .. tab-item:: Parameters
                         
-                        {".. pydantic-model:: " + params_cls_path if params_cls_path else "**No action parameters**"}
+                        {f".. pydantic-model:: {params_cls_path}" if params_cls_path else "**No action parameters**"}
                        
                     .. tab-item:: Supported Triggers\n\n{indented_triggers}\n
                         {indented_cli_trigger_example}
             """
         )
+
         nested_parse_with_titles(self.state, StringList(content.split("\n")), node)
         return node.children
 
@@ -362,11 +360,10 @@ class RobustaActionDirective(SphinxDirective):
     def __get_description(self, action_definition: Action):
         description = ""
 
-        docs = inspect.getdoc(action_definition.func)
-        if docs:
+        if docs := inspect.getdoc(action_definition.func):
             description += docs + "\n\n"
         if self.content:
-            description += "\n".join(l for l in self.content)
+            description += "\n".join(self.content)
         if not description:
             description += "*No description*"
 
@@ -378,7 +375,7 @@ class RobustaActionDirective(SphinxDirective):
             # sphinx handles image paths in a weird way
             # we want the path to look like an absolute paths, but really be relative to the docs/ directory
             root_docs_dir = Path(__file__).parent.parent.parent
-            relative_path = "/../" + str(path.relative_to(root_docs_dir))
+            relative_path = f"/../{str(path.relative_to(root_docs_dir))}"
             image = Image.open(path.resolve())
             width, height = self.__get_image_size(*image.size)
 

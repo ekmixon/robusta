@@ -29,10 +29,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         execution_event: Optional[ExecutionBaseEvent] = None
         sink_findings: Dict[str, List[Finding]] = defaultdict(list)
         for playbook in playbooks:
-            fired_trigger = self.__get_fired_trigger(
+            if fired_trigger := self.__get_fired_trigger(
                 trigger_event, playbook.triggers, playbook.get_id()
-            )
-            if fired_trigger:
+            ):
                 execution_event = fired_trigger.build_execution_event(
                     trigger_event, sink_findings
                 )
@@ -43,13 +42,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         else self.registry.get_playbooks().get_default_sinks()
                     )
 
-                    playbook_resp = self.__run_playbook_actions(
+                    if playbook_resp := self.__run_playbook_actions(
                         execution_event,
                         playbook.get_actions(),
-                    )
-                    if (
-                        playbook_resp
-                    ):  # For now, only last response applies. (For simplicity reasons)
+                    ):
                         execution_response = playbook_resp
                     if playbook.stop or execution_event.stop_processing:
                         break
@@ -197,10 +193,14 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         playbook_triggers: List[Trigger],
         playbook_id: str,
     ) -> Optional[BaseTrigger]:
-        for trigger in playbook_triggers:
-            if trigger.get().should_fire(trigger_event, playbook_id):
-                return trigger.get()
-        return None
+        return next(
+            (
+                trigger.get()
+                for trigger in playbook_triggers
+                if trigger.get().should_fire(trigger_event, playbook_id)
+            ),
+            None,
+        )
 
     def __handle_findings(self, execution_event: ExecutionBaseEvent):
         sinks_info = self.registry.get_telemetry().sinks_info

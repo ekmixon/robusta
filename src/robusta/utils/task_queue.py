@@ -56,7 +56,7 @@ class TaskQueue(Queue):
             self.metrics.on_rejected(self.name)
 
     def __start_workers(self):
-        for i in range(self.num_workers):
+        for _ in range(self.num_workers):
             t = Thread(target=self.worker)
             t.daemon = True
             t.start()

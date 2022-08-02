@@ -133,9 +133,9 @@ def upload_file(
         while resp.is_open():
             resp.update(timeout=1)
             if resp.peek_stdout():
-                print("STDOUT: %s" % resp.read_stdout())
+                print(f"STDOUT: {resp.read_stdout()}")
             if resp.peek_stderr():
-                print("STDERR: %s" % resp.read_stderr())
+                print(f"STDERR: {resp.read_stderr()}")
             else:
                 break
         resp.close()

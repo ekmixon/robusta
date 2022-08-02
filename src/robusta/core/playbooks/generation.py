@@ -18,10 +18,7 @@ def get_possible_types(t):
     """
     Given a type or a Union of types, returns a list of the actual types
     """
-    if get_origin(t) == Union:
-        return get_args(t)
-    else:
-        return [t]
+    return get_args(t) if get_origin(t) == Union else [t]
 
 
 # see https://stackoverflow.com/questions/13518819/avoid-references-in-pyyaml
@@ -43,17 +40,18 @@ class ExamplesGenerator:
             trigger_classes = [
                 t for t in get_possible_types(field.type_) if issubclass(t, BaseTrigger)
             ]
-            if len(trigger_classes) == 0:
+            if not trigger_classes:
                 continue
 
             for t in trigger_classes:
                 self.triggers_to_yaml[t] = field_name
                 execution_event = t.get_execution_event_type()
-                possible_events = [execution_event] + list(
+                possible_events = [execution_event] + [
                     cls
                     for cls in execution_event.__mro__
                     if issubclass(cls, ExecutionBaseEvent)
-                )
+                ]
+
                 for e in possible_events:
                     self.events_to_triggers[e].add(t)
 
@@ -72,9 +70,7 @@ class ExamplesGenerator:
         if action.params_type:
             required: List[str] = action.params_type.schema().get("required", [])
             for field in required:
-                action_params_sample = (
-                    action_params_sample + f" {field}={field.upper()}"
-                )
+                action_params_sample = f"{action_params_sample} {field}={field.upper()}"
 
         if action.event_type.__name__ == "ExecutionBaseEvent":
             return (
@@ -95,9 +91,9 @@ class ExamplesGenerator:
         )
         required_fields: List[str] = from_params_parameters_class.schema()["required"]
         for field in required_fields:
-            cmd = cmd + f" {field}={from_params_k8s_type}_{field.upper()}"
+            cmd = f"{cmd} {field}={from_params_k8s_type}_{field.upper()}"
 
-        return cmd + f" {action_params_sample}"
+        return f"{cmd} {action_params_sample}"
 
     # build a triggers list for events that much k8s objects
     @classmethod

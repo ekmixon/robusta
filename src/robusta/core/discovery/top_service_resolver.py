@@ -50,10 +50,14 @@ class TopServiceResolver:
     # temporary try to guess who the owner service is.
     @classmethod
     def guess_service_key(cls, name: str, namespace: str) -> str:
-        for cached_service in cls.__namespace_to_service[namespace]:
-            if name.startswith(cached_service.name):
-                return cached_service.get_service_key()
-        return ""
+        return next(
+            (
+                cached_service.get_service_key()
+                for cached_service in cls.__namespace_to_service[namespace]
+                if name.startswith(cached_service.name)
+            ),
+            "",
+        )
 
     @classmethod
     def add_cached_service(cls, service: ServiceInfo):

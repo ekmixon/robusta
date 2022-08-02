@@ -15,10 +15,7 @@ class MsTeamsAdaptiveCardFiles():
         image_section_map: map = MsTeamsAdaptiveCardFilesImage().create_files_for_presentation(file_blocks)
         text_files_section_list = self.text_files.create_files_for_presentation(file_blocks)
 
-        if image_section_map:
-            image_section_map = [image_section_map]
-        else:
-            image_section_map = []
+        image_section_map = [image_section_map] if image_section_map else []
         return text_files_section_list + image_section_map
 
     # return the list of text containers with the list of lines, so later after

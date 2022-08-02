@@ -41,7 +41,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     # Perform a rate limit for this pod according to the rate_limit parameter
     if not RateLimiter.mark_and_test(
         "image_pull_backoff_reporter",
-        namespace + ":" + pod_name,
+        f"{namespace}:{pod_name}",
         action_params.rate_limit,
     ):
         return
@@ -231,11 +231,14 @@ class ImagePullBackoffInvestigator:
             f'Failed to pull image "{image_name}": rpc error: code = NotFound desc = ',
         ]
 
-        for prefix in prefixes:
-            if pod_event.message.startswith(prefix):
-                return pod_event.message[len(prefix) :]
-
-        return None
+        return next(
+            (
+                pod_event.message[len(prefix) :]
+                for prefix in prefixes
+                if pod_event.message.startswith(prefix)
+            ),
+            None,
+        )
 
     def get_reason_from_kubelet_image_pull_error(
         self, kubelet_image_pull_error: str

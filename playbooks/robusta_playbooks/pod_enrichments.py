@@ -15,8 +15,9 @@ def pod_events_enricher(event: PodEvent):
         )
         return
 
-    events_table_block = get_resource_events_table("*Pod events:*", pod.kind, pod.metadata.name, pod.metadata.namespace)
-    if events_table_block:
+    if events_table_block := get_resource_events_table(
+        "*Pod events:*", pod.kind, pod.metadata.name, pod.metadata.namespace
+    ):
         event.add_enrichment([events_table_block])
 
 

@@ -38,7 +38,7 @@ class MarkdownBlock(BaseBlock):
             text = textwrap.dedent(text)
 
         if len(text) >= BLOCK_SIZE_LIMIT:
-            text = text[:BLOCK_SIZE_LIMIT] + "..."
+            text = f"{text[:BLOCK_SIZE_LIMIT]}..."
         super().__init__(text=text)
 
 
@@ -148,10 +148,7 @@ class KubernetesDiffBlock(BaseBlock):
 
     @staticmethod
     def _obj_to_content(obj: Optional[HikaruDocumentBase]):
-        if obj is None:
-            return ""
-        else:
-            return hikaru.get_yaml(obj)
+        return "" if obj is None else hikaru.get_yaml(obj)
 
     @staticmethod
     def _obj_to_name(obj: Optional[HikaruDocumentBase], name: str, namespace: str = ""):
@@ -223,8 +220,9 @@ class TableBlock(BaseBlock):
                 # just divide equally
                 columns_max_widths = [
                     int(PRINTED_TABLE_MAX_WIDTH / len(columns_max_widths))
-                    for i in range(0, len(columns_max_widths))
+                    for _ in range(len(columns_max_widths))
                 ]
+
 
         return columns_max_widths
 

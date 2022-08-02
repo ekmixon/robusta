@@ -212,8 +212,6 @@ def gen_config(
         )
 
     enable_platform_playbooks = False
-    # we have a slightly different flow here than the other options so that pytest can pass robusta_api_key="" to skip
-    # asking the question
     if robusta_api_key is None:
         if typer.confirm(
             "Would you like to use Robusta UI? This is HIGHLY recommended.",
@@ -361,9 +359,10 @@ def gen_config(
             fg="green",
         )
         typer.secho(
-            f"Save this file for future use. It contains your account credentials",
+            "Save this file for future use. It contains your account credentials",
             fg="red",
         )
+
 
     if robusta_api_key:
         typer.secho(
@@ -403,7 +402,7 @@ def demo():
         "In ~30 seconds you should receive a slack notification on a crashing pod"
     )
     time.sleep(60)
-    subprocess.check_call(f"kubectl delete deployment crashpod", shell=True)
+    subprocess.check_call("kubectl delete deployment crashpod", shell=True)
     log_title("Done!")
 
 

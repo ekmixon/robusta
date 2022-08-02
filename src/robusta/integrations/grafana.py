@@ -108,7 +108,10 @@ class Grafana:
     def __get_panels_with_substring(self, dashboard, panel_substring):
         panel_ids = []
         for row in dashboard["rows"]:
-            for panel in row["panels"]:
-                if panel_substring.lower() in panel["title"].lower():
-                    panel_ids.append(panel["id"])
+            panel_ids.extend(
+                panel["id"]
+                for panel in row["panels"]
+                if panel_substring.lower() in panel["title"].lower()
+            )
+
         return panel_ids

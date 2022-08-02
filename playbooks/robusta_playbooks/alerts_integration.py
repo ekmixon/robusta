@@ -163,10 +163,8 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
     """
     alert_labels = alert.alert.labels
     labels = {x: alert_labels[x] for x in alert_labels}
-    node = alert.get_node()
-    if node:
-        internal_ip = get_node_internal_ip(node)
-        if internal_ip:
+    if node := alert.get_node():
+        if internal_ip := get_node_internal_ip(node):
             labels['node_internal_ip'] = internal_ip
 
     graph_enrichment = create_resource_enrichment(
@@ -204,7 +202,7 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
     Note that Slack markdown links use a different format than GitHub.
     """
     labels = defaultdict(lambda: "<missing>")
-    labels.update(alert.alert.labels)
+    labels |= alert.alert.labels
     template = Template(params.template)
     alert.add_enrichment(
         [MarkdownBlock(template.safe_substitute(labels))],
@@ -238,8 +236,7 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
                 ],
             )
         return
-    log_data = pod.get_logs()
-    if log_data:
+    if log_data := pod.get_logs():
         event.add_enrichment(
             [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
         )
@@ -286,18 +283,18 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
     """
     Add a button to the alert - clicking it will show the top StackOverflow search results on this alert name.
     """
-    alert_name = alert.alert.labels.get("alertname", "")
-    if not alert_name:
+    if alert_name := alert.alert.labels.get("alertname", ""):
+        alert.add_enrichment(
+            [
+                CallbackBlock(
+                    {
+                        f'Search StackOverflow for "{alert_name}"': CallbackChoice(
+                            action=show_stackoverflow_search,
+                            action_params=SearchTermParams(search_term=alert_name),
+                        )
+                    },
+                )
+            ]
+        )
+    else:
         return
-    alert.add_enrichment(
-        [
-            CallbackBlock(
-                {
-                    f'Search StackOverflow for "{alert_name}"': CallbackChoice(
-                        action=show_stackoverflow_search,
-                        action_params=SearchTermParams(search_term=alert_name),
-                    )
-                },
-            )
-        ]
-    )

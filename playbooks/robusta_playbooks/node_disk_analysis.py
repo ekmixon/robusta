@@ -44,7 +44,7 @@ def node_disk_analyzer(event: NodeEvent):
             pod_uid_to_namespace[pod.metadata.annotations["kubernetes.io/config.hash"]] = pod.metadata.namespace
 
         for container_status in pod.status.containerStatuses:
-            container_id = re.match(".*//(.*)$", container_status.containerID).group(1)
+            container_id = re.match(".*//(.*)$", container_status.containerID)[1]
             container_id_to_name[container_id] = container_status.name
 
     # run disk-tools on node and parse its json output
@@ -89,10 +89,14 @@ def node_disk_analyzer(event: NodeEvent):
     pod_distribution_rows = [
         [
             find_in_dict_or_default(pod_uid_to_namespace, p["pod_uid"], ""),
-            find_in_dict_or_default(pod_uid_to_name, p["pod_uid"], p["pod_uid"]),
-            sum([c["disk_size"] for c in p["containers"]])
-        ] for p in pods_distribution
+            find_in_dict_or_default(
+                pod_uid_to_name, p["pod_uid"], p["pod_uid"]
+            ),
+            sum(c["disk_size"] for c in p["containers"]),
+        ]
+        for p in pods_distribution
     ]
+
     pod_distribution_rows.sort(key=lambda row: row[2], reverse=True)
     for row in pod_distribution_rows:
         row[2] = humanize.naturalsize(row[2], binary=True)
@@ -129,6 +133,4 @@ def node_disk_analyzer(event: NodeEvent):
 
 
 def find_in_dict_or_default(d, item, default):
-    if item in d:
-        return d[item]
-    return default
+    return d[item] if item in d else default

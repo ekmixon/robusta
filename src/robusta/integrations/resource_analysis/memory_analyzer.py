@@ -9,7 +9,7 @@ from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 
 class MemoryAnalyzer:
     def __init__(self, prometheus_url: str, prometheus_tzinfo: tzinfo):
-        if prometheus_url is None or prometheus_url == "":
+        if prometheus_url is None or not prometheus_url:
             prometheus_url = PrometheusDiscovery.find_prometheus_url()
 
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
@@ -23,11 +23,10 @@ class MemoryAnalyzer:
         :return: a float between 0 and 1, representing the maximal percentage of memory in use by the given node
         """
 
-        max_memory_usage_in_percentage = self._get_max_value_in_first_series_of_query(
+        return self._get_max_value_in_first_series_of_query(
             f"instance:node_memory_utilisation:ratio{{job=\"node-exporter\", job=\"node-exporter\", instance=\"{node_name}\"}}",
-            duration
+            duration,
         )
-        return max_memory_usage_in_percentage
 
     def get_container_max_memory_usage_in_bytes(self, node_name: str, pod_name: str, container_name: str, duration: timedelta) -> float:
         """
@@ -75,24 +74,19 @@ class MemoryAnalyzer:
 
         series = results[0]
         series_values = series["values"]
-        max_value_in_series = max([float(val) for (timestamp, val) in series_values])
-        return max_value_in_series
+        return max(float(val) for (timestamp, val) in series_values)
 
     def _query(self, promql_query: str, duration: timedelta) -> list:
         end_time = datetime.now(tz=self.prometheus_tzinfo)
         start_time = end_time - duration
         step = 1
-        results = self.prom.custom_query_range(
+        return self.prom.custom_query_range(
             promql_query,
             start_time,
             end_time,
             step,
-            {
-                "timeout": self.default_prometheus_params["timeout"]
-            }
+            {"timeout": self.default_prometheus_params["timeout"]},
         )
-
-        return results
 
 
 k8s_memory_factors = {
@@ -118,4 +112,6 @@ class K8sMemoryTransformer:
         if len(mem_spec) > 1 and mem_spec[-1] in k8s_memory_factors:
             return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
 
-        raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
+        raise Exception(
+            f"number of bytes could not be extracted from memory spec: {mem_spec}"
+        )

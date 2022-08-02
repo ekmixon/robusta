@@ -33,13 +33,12 @@ def event_history(event: ExecutionBaseEvent):
             # if there were multiple warnings on the same object we dont want the history pulled multiple times
             continue
         finding = create_debug_event_finding(warning_event)
-        events_table = get_resource_events_table(
+        if events_table := get_resource_events_table(
             "Resource events",
             warning_event.involvedObject.kind,
             warning_event.involvedObject.name,
-            warning_event.involvedObject.namespace
-        )
-        if events_table:
+            warning_event.involvedObject.namespace,
+        ):
             finding.add_enrichment([events_table])
             event.add_finding(finding)
         reported_obj_history_list.append(warning_event_key)

@@ -244,9 +244,7 @@ def get_loaded_module_info(data):
 
 def get_debugger_warnings(data):
     message = data["message"]
-    if message.strip().lower() == "success":
-        return None
-    return message
+    return None if message.strip().lower() == "success" else message
 
 
 @action
@@ -265,7 +263,7 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     pid = process_finder.get_lowest_relevant_pid()
 
     if not pid:
-        logging.info(f"debugger_stack_trace - no relevant pids")
+        logging.info("debugger_stack_trace - no relevant pids")
 
     # if params pid is set, this will be returned, if not we return the parent process
     finding = Finding(
@@ -317,14 +315,15 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
     if not relevant_processes_pids:
-        ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
+        ERROR_MESSAGE = "No relevant processes found for advanced debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
         return
 
     finding.add_enrichment(
-        [MarkdownBlock(f"Please select an advanced debugging choice:")]
+        [MarkdownBlock("Please select an advanced debugging choice:")]
     )
+
     if params.interactive:
         choices = {}
         for proc_pid in relevant_processes_pids:

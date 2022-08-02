@@ -51,15 +51,14 @@ def node_allocatable_resources_enricher(event: NodeEvent):
         )
         return
 
-    block_list: List[BaseBlock] = []
-    if node:
-        block_list.append(
-            TableBlock(
-                [[k, v] for (k, v) in node.status.allocatable.items()],
-                ["resource", "value"],
-                table_name="Node Allocatable Resources - The amount of compute resources that are available for pods"
-            )
+    block_list: List[BaseBlock] = [
+        TableBlock(
+            [[k, v] for (k, v) in node.status.allocatable.items()],
+            ["resource", "value"],
+            table_name="Node Allocatable Resources - The amount of compute resources that are available for pods",
         )
+    ]
+
     event.add_enrichment(block_list)
 
 
@@ -81,10 +80,13 @@ def node_status_enricher(event: NodeEvent):
     event.add_enrichment(
         [
             TableBlock(
-                [[c.type, c.status] for c in event.get_node().status.conditions],
+                [
+                    [c.type, c.status]
+                    for c in event.get_node().status.conditions
+                ],
                 headers=["Type", "Status"],
-                table_name=f"*Node status details:*"
-            ),
+                table_name="*Node status details:*",
+            )
         ]
     )
 
@@ -139,8 +141,7 @@ def node_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherPara
     labels = {'node': node_event.get_node().metadata.name}
 
     node = node_event.get_node()
-    internal_ip = get_node_internal_ip(node)
-    if internal_ip:
+    if internal_ip := get_node_internal_ip(node):
         labels['node_internal_ip'] = internal_ip
 
     graph_enrichment = create_resource_enrichment(

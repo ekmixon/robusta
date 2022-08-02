@@ -69,11 +69,11 @@ class MsTeamsMsg:
     def upload_files(self, file_blocks: List[FileBlock]):
         msteams_files = MsTeamsAdaptiveCardFiles()
         block_list: List[MsTeamsBase] = msteams_files.upload_files(file_blocks)
-        if len(block_list) > 0:
+        if block_list:
             self.__sub_section_separator()
 
         self.text_file_containers += msteams_files.get_text_files_containers_list()
-        
+
         self.__write_to_current_section(block_list)
 
     def table(self, table_block : TableBlock):
@@ -109,10 +109,11 @@ class MsTeamsMsg:
 
     # dont include the base 64 images in the total size calculation
     def _put_text_files_data_up_to_max_limit(self, complete_card_map: map):
-        curr_images_len = 0
-        for element in self.entire_msg:
-            if isinstance(element, MsTeamsImages):
-                curr_images_len += element.get_images_len_in_bytes()
+        curr_images_len = sum(
+            element.get_images_len_in_bytes()
+            for element in self.entire_msg
+            if isinstance(element, MsTeamsImages)
+        )
 
         max_len_left = self.MAX_SIZE_IN_BYTES - (self.__get_current_card_len(complete_card_map) - curr_images_len)
 

@@ -27,8 +27,9 @@ class SinksRegistry:
         self.default_sinks = [sink.sink_name for sink in sinks.values() if sink.default]
         if not self.default_sinks:
             logging.warning(
-                f"No default sinks defined. By default, actions results are ignored."
+                "No default sinks defined. By default, actions results are ignored."
             )
+
         platform_sinks = [sink for sink in sinks.values() if isinstance(sink.params, RobustaSinkParams)]
         self.platform_enabled = len(platform_sinks) > 0
 
@@ -45,14 +46,15 @@ class SinksRegistry:
         existing_sinks: Dict[str, SinkBase],
         registry
     ) -> Dict[str, SinkBase]:
-    
+
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [
             sink_name
-            for sink_name in existing_sinks.keys()
+            for sink_name in existing_sinks
             if sink_name not in new_sink_names
         ]
+
         for deleted_sink in deleted_sink_names:
             logging.info(f"Deleting sink {deleted_sink}")
             existing_sinks[deleted_sink].stop()
@@ -149,12 +151,11 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
             playbook_def.post_init()
 
             # add the playbook only once for each event.
-            playbooks_trigger_events = set(
-                [
-                    trigger_definition.get().get_trigger_event()
-                    for trigger_definition in playbook_def.triggers
-                ]
-            )
+            playbooks_trigger_events = {
+                trigger_definition.get().get_trigger_event()
+                for trigger_definition in playbook_def.triggers
+            }
+
             for event in playbooks_trigger_events:
                 self.triggers_to_playbooks[event].append(playbook_def)
 

@@ -18,8 +18,7 @@ class PrometheusDiscovery:
             "app.kubernetes.io/name=prometheus",
         ]
         for label_selector in prometheus_selectors:
-            service_url = find_service_url(label_selector)
-            if service_url:
+            if service_url := find_service_url(label_selector):
                 cls.prometheus_url = service_url
                 return service_url
         logging.error(

@@ -76,9 +76,9 @@ class MsTeamsAdaptiveCardFilesText:
         open_text_action = self.__action(index, open=True, title='press to open')
         close_text_action = self.__action(index, open=False, title='press to close')
 
-        open_text = MsTeamsTextBlock('***open ' + file_name + '***', is_subtle=False)
-        close_start = MsTeamsTextBlock('***close ' + file_name + '***', is_subtle=False)
-        close_end = MsTeamsTextBlock('***close ' + file_name + '***', is_subtle=False)
+        open_text = MsTeamsTextBlock(f'***open {file_name}***', is_subtle=False)
+        close_start = MsTeamsTextBlock(f'***close {file_name}***', is_subtle=False)
+        close_end = MsTeamsTextBlock(f'***close {file_name}***', is_subtle=False)
 
         self.open_text_list.append(open_text)
         self.close_start_text_list.append(close_start)
@@ -145,12 +145,9 @@ class MsTeamsAdaptiveCardFilesText:
     # there is a limit to the number of letters you can write - dont know what it is !!!
     # /t doesn't work so we need to simulate spaces (which are trimmed so we use '. . . ')
     def __present_text_file_block(self, key: str, text: str):
-        text_lines_list = []
         new_text = text.replace('\t', '. . . ')
 
-        for line in new_text.split('\n'):
-            text_lines_list.append(line + '\n\n')
-
+        text_lines_list = [line + '\n\n' for line in new_text.split('\n')]
         # will be completed later
         text_block = MsTeamsTextBlock('', wrap=True, weight='bolder', is_visible=True)
         self.text_map_and_single_text_lines_list.append([text_block, text_lines_list])
@@ -159,7 +156,4 @@ class MsTeamsAdaptiveCardFilesText:
     @classmethod
     def __is_txt_file(cls, file_name: str) -> bool:
         txt_suffixes = ['.txt', '.json', '.yaml', '.log']
-        for prefix in txt_suffixes:
-            if file_name.lower().endswith(prefix):
-                return True
-        return False
+        return any(file_name.lower().endswith(prefix) for prefix in txt_suffixes)

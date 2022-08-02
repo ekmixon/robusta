@@ -44,7 +44,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         filtered_diffs = list(
             filter(lambda x: is_matching_diff(x, config.fields_to_monitor), all_diffs)
         )
-        if len(filtered_diffs) == 0:
+        if not filtered_diffs:
             return
 
     if (
@@ -63,8 +63,11 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         source=FindingSource.KUBERNETES_API_SERVER,
         finding_type=FindingType.CONF_CHANGE,
         failure=False,
-        aggregation_key=f"ConfigurationChange/KubernetesResource/Change",
-        subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
+        aggregation_key="ConfigurationChange/KubernetesResource/Change",
+        subject=KubeObjFindingSubject(
+            event.obj, should_add_node_name=should_get_subject_node_name
+        ),
     )
+
     finding.add_enrichment([diff_block])
     event.add_finding(finding)

@@ -82,7 +82,7 @@ class ActionRequestReceiver:
             time.sleep(INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC)
 
     def stop(self):
-        logging.info(f"Stopping incoming receiver")
+        logging.info("Stopping incoming receiver")
         self.active = False
         self.ws.close()
 
@@ -108,8 +108,7 @@ class ActionRequestReceiver:
         # TODO: use typed pydantic classes here?
         logging.debug(f"received incoming message {message}")
         incoming_event = json.loads(message)
-        actions = incoming_event.get("actions", None)
-        if actions:  # this is slack callback format
+        if actions := incoming_event.get("actions", None):
             # slack callbacks have a list of 'actions'. Within each action there a 'value' field,
             # which container the actual action details we need to run.
             # This wrapper format is part of the slack API, and cannot be changed by us.
@@ -122,7 +121,7 @@ class ActionRequestReceiver:
                     logging.error(
                         f"Failed to run incoming event {incoming_event}", exc_info=True
                     )
-        else:  # assume it's ActionRequest format
+        else:
             try:
                 self.__exec_external_request(
                     ExternalActionRequest(**incoming_event), True

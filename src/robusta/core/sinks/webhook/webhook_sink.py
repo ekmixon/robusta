@@ -21,9 +21,7 @@ class WebhookSink(SinkBase):
         message_lines: List[str] = [finding.title]
         if platform_enabled:
             message_lines.append(f"Investigate: {finding.investigate_uri}")
-        message_lines.append(f"Source: {self.cluster_name}")
-        message_lines.append(finding.description)
-
+        message_lines.extend((f"Source: {self.cluster_name}", finding.description))
         message = ""
 
         for enrichment in finding.enrichments:
@@ -55,17 +53,20 @@ class WebhookSink(SinkBase):
 
         return markdown_text
 
-    def __to_unformatted_text(cls, block: BaseBlock) -> List[str]:
+    def __to_unformatted_text(self, block: BaseBlock) -> List[str]:
         lines = []
         if isinstance(block, HeaderBlock):
             lines.append(block.text)
         elif isinstance(block, ListBlock):
-            lines.extend([cls.__to_clear_text(item) for item in block.items])
+            lines.extend([self.__to_clear_text(item) for item in block.items])
         elif isinstance(block, MarkdownBlock):
-            lines.append(cls.__to_clear_text(block.text))
+            lines.append(self.__to_clear_text(block.text))
         elif isinstance(block, JsonBlock):
             lines.append(block.json_str)
         elif isinstance(block, KubernetesDiffBlock):
-            for diff in block.diffs:
-                lines.append(f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}")
+            lines.extend(
+                f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}"
+                for diff in block.diffs
+            )
+
         return lines

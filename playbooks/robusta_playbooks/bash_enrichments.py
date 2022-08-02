@@ -14,8 +14,13 @@ def pod_bash_enricher(event: PodEvent, params: BashParams):
 
     block_list: List[BaseBlock] = []
     exec_result = pod.exec(params.bash_command)
-    block_list.append(MarkdownBlock(f"Command results for *{params.bash_command}:*"))
-    block_list.append(MarkdownBlock(exec_result))
+    block_list.extend(
+        (
+            MarkdownBlock(f"Command results for *{params.bash_command}:*"),
+            MarkdownBlock(exec_result),
+        )
+    )
+
     event.add_enrichment(block_list)
 
 
@@ -34,6 +39,11 @@ def node_bash_enricher(event: NodeEvent, params: BashParams):
     exec_result = RobustaPod.exec_in_debugger_pod(
         "node-bash-pod", node.metadata.name, params.bash_command
     )
-    block_list.append(MarkdownBlock(f"Command results for *{params.bash_command}:*"))
-    block_list.append(MarkdownBlock(exec_result))
+    block_list.extend(
+        (
+            MarkdownBlock(f"Command results for *{params.bash_command}:*"),
+            MarkdownBlock(exec_result),
+        )
+    )
+
     event.add_enrichment(block_list)

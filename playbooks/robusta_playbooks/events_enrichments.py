@@ -39,8 +39,7 @@ def event_resource_events(event: EventChangeEvent, action_params: FindingKeyPara
     Given a Kubernetes event, gather all other events on the same resource in the near past
     """
     k8s_obj = event.obj.involvedObject
-    events_table = get_resource_events_table(
+    if events_table := get_resource_events_table(
         "Resource events", k8s_obj.kind, k8s_obj.name, k8s_obj.namespace
-    )
-    if events_table:
+    ):
         event.add_enrichment([events_table])

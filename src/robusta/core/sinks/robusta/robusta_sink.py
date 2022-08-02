@@ -171,14 +171,16 @@ class RobustaSink(SinkBase):
 
     @classmethod
     def __to_active_conditions_str(cls, conditions: List[NodeCondition]) -> str:
-        if not conditions:
-            return ""
-        return ",".join(
-            [
-                f"{condition.type}:{condition.status}"
-                for condition in conditions
-                if condition.status != "False" or condition.type == "Ready"
-            ]
+        return (
+            ",".join(
+                [
+                    f"{condition.type}:{condition.status}"
+                    for condition in conditions
+                    if condition.status != "False" or condition.type == "Ready"
+                ]
+            )
+            if conditions
+            else ""
         )
 
     @classmethod
@@ -221,14 +223,14 @@ class RobustaSink(SinkBase):
             memory_allocatable=PodRequests.parse_mem(
                 api_server_node.status.allocatable.get("memory", "0Mi")
             ),
-            memory_allocated=sum([req.memory for req in pod_requests]),
+            memory_allocated=sum(req.memory for req in pod_requests),
             cpu_capacity=PodRequests.parse_cpu(
                 api_server_node.status.capacity.get("cpu", "0")
             ),
             cpu_allocatable=PodRequests.parse_cpu(
                 api_server_node.status.allocatable.get("cpu", "0")
             ),
-            cpu_allocated=round(sum([req.cpu for req in pod_requests]), 3),
+            cpu_allocated=round(sum(req.cpu for req in pod_requests), 3),
             pods_count=len(pod_requests),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests]),
             node_info=cls.__to_node_info(api_server_node),
@@ -238,10 +240,7 @@ class RobustaSink(SinkBase):
         self, current_nodes: NodeList, node_requests: Dict[str, List[PodRequests]]
     ):
         # convert to map
-        curr_nodes = {}
-        for node in current_nodes.items:
-            curr_nodes[node.metadata.name] = node
-
+        curr_nodes = {node.metadata.name: node for node in current_nodes.items}
         # handle deleted nodes
         cache_keys = list(self.__nodes_cache.keys())
         for node_name in cache_keys:
@@ -251,7 +250,7 @@ class RobustaSink(SinkBase):
                 del self.__nodes_cache[node_name]
 
         # new or changed nodes
-        for node_name in curr_nodes.keys():
+        for node_name in curr_nodes:
             updated_node = self.__from_api_server_node(
                 curr_nodes.get(node_name), node_requests[node_name]
             )
@@ -327,7 +326,7 @@ class RobustaSink(SinkBase):
             thread = threading.Thread(target=self.__get_events_history)
             thread.start()
         except:
-            logging.error(f"Failed to run events history thread")
+            logging.error("Failed to run events history thread")
 
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
@@ -341,7 +340,9 @@ class RobustaSink(SinkBase):
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
     def __periodic_cluster_status(self):
-        if self.registry.get_telemetry().last_alert_at:
-            if time.time() - self.last_send_time > PERIODIC_LONG_SEC:
-                self.last_send_time = time.time()
-                self.__update_cluster_status()
+        if (
+            self.registry.get_telemetry().last_alert_at
+            and time.time() - self.last_send_time > PERIODIC_LONG_SEC
+        ):
+            self.last_send_time = time.time()
+            self.__update_cluster_status()

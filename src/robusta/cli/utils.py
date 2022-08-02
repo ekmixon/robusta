@@ -14,10 +14,7 @@ PLAYBOOKS_DIR = "playbooks/"
 
 
 def namespace_to_kubectl(namespace: Optional[str]):
-    if namespace is None:
-        return ""
-    else:
-        return f"-n {namespace}"
+    return "" if namespace is None else f"-n {namespace}"
 
 
 def exec_in_robusta_runner(

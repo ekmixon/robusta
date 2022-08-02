@@ -26,9 +26,7 @@ def get_function_params_class(func: Callable):
 
 def get_params_schema(func):
     action_params = get_function_params_class(func)
-    if action_params is None:
-        return None
-    return action_params.schema()
+    return None if action_params is None else action_params.schema()
 
 
 def load_scripts(scripts_root):

@@ -38,12 +38,12 @@ CLUSTERS_STATUS_TABLE = "ClustersStatus"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
-    def _set_timeout(*args, **kwargs):
+    def _set_timeout(self, **kwargs):
         """Set timer task"""
         # _set_timeout isn't implemented in gotrue client. it's required for the jwt refresh token timer task
         # https://github.com/supabase/gotrue-py/blob/49c092e3a4a6d7bb5e1c08067a4c42cc2f74b5cc/gotrue/client.py#L242
         # callback, timeout_ms
-        threading.Timer(args[2] / 1000, args[1]).start()
+        threading.Timer(self[2] / 1000, self[1]).start()
 
 
 class RobustaClient(Client):
@@ -55,11 +55,10 @@ class RobustaClient(Client):
         else:
             access_token = self.supabase_key
 
-        headers: Dict[str, str] = {
+        return {
             "apiKey": self.supabase_key,
             "Authorization": f"Bearer {access_token}",
         }
-        return headers
 
     @staticmethod
     def _init_supabase_auth_client(
@@ -168,11 +167,12 @@ class SupabaseDal:
                         "type": "table",
                         "data": {
                             "headers": block.headers,
-                            "rows": [row for row in block.rows],
+                            "rows": list(block.rows),
                             "column_renderers": block.column_renderers,
                         },
                     }
                 )
+
             elif isinstance(block, KubernetesDiffBlock):
                 structured_data.append(
                     {
@@ -189,21 +189,20 @@ class SupabaseDal:
                     }
                 )
             elif isinstance(block, CallbackBlock):
-                callbacks = []
-                for (text, callback) in block.choices.items():
-                    callbacks.append(
-                        {
-                            "text": text,
-                            "callback": ExternalActionRequestBuilder.create_for_func(
-                                callback,
-                                self.sink_name,
-                                text,
-                                self.account_id,
-                                self.cluster,
-                                self.signing_key,
-                            ).json(),
-                        }
-                    )
+                callbacks = [
+                    {
+                        "text": text,
+                        "callback": ExternalActionRequestBuilder.create_for_func(
+                            callback,
+                            self.sink_name,
+                            text,
+                            self.account_id,
+                            self.cluster,
+                            self.signing_key,
+                        ).json(),
+                    }
+                    for text, callback in block.choices.items()
+                ]
 
                 structured_data.append({"type": "callbacks", "data": callbacks})
             else:
@@ -373,7 +372,7 @@ class SupabaseDal:
         try:
             self.sign_in()
         except Exception as e:
-            logging.error(f"Failed to sign in on error", exc_info=True)
+            logging.error("Failed to sign in on error", exc_info=True)
 
     def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
         db_cluster_status = data.dict()

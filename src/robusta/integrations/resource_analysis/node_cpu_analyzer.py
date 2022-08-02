@@ -64,13 +64,12 @@ class NodeCpuAnalyzer:
         pod_value_pairs = [(r["metric"]["pod"], float(r["value"][1])) for r in result]
         pod_value_pairs = [(k, v) for (k, v) in pod_value_pairs if v >= threshold]
         pod_value_pairs.sort(key=lambda x: x[1], reverse=True)
-        pod_to_cpu = OrderedDict(pod_value_pairs)
-        return pod_to_cpu
+        return OrderedDict(pod_value_pairs)
 
     def get_per_pod_cpu_request(self):
         query = f'sum by (pod)(kube_pod_container_resource_requests_cpu_cores{{node="{self.node.metadata.name}"}})'
         result = self.prom.custom_query(query, params=self.default_prometheus_params)
-        return dict((r["metric"]["pod"], float(r["value"][1])) for r in result)
+        return {r["metric"]["pod"]: float(r["value"][1]) for r in result}
 
     def _query(self, query):
         """
@@ -80,11 +79,7 @@ class NodeCpuAnalyzer:
         return float(result[0]["value"][1])
 
     def _build_query_for_containerized_cpu_usage(self, total, normalized_by_cpu_count):
-        if total:
-            grouping = ""
-        else:
-            grouping = "by (pod)"
-
+        grouping = "" if total else "by (pod)"
         if normalized_by_cpu_count:
             # we divide by the number of machine_cpu_cores to return a result in th 0-1 range regardless of cpu count
             normalization = (

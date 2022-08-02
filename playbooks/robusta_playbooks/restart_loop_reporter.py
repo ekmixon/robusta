@@ -79,8 +79,7 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
                     f"*{container_status.name}* termination reason: {container_status.lastState.terminated.reason}"
                 )
             )
-        container_log = pod.get_logs(container_status.name, previous=True)
-        if container_log:
+        if container_log := pod.get_logs(container_status.name, previous=True):
             blocks.append(FileBlock(f"{pod_name}.txt", container_log))
         else:
             blocks.append(

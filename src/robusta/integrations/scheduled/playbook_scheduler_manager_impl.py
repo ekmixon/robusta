@@ -90,7 +90,7 @@ class PlaybooksSchedulerManagerImpl(PlaybooksSchedulerManager):
         )
 
     def update(self, playbooks: List[PlaybookDefinition]):
-        playbook_ids = set(playbook.get_id() for playbook in playbooks)
+        playbook_ids = {playbook.get_id() for playbook in playbooks}
         self.__unschedule_deleted_playbooks(playbook_ids)
 
         for playbook in playbooks:
