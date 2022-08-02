@@ -31,7 +31,10 @@ class TelemetryService:
 
         sentry_dsn = os.environ.get("SENTRY_DSN", "")
         if self.telemetry_level == TelemetryLevel.ERROR and sentry_dsn:
-            logging.info(f"Telemetry set to include error info, Thank you for helping us improve Robusta.")
+            logging.info(
+                "Telemetry set to include error info, Thank you for helping us improve Robusta."
+            )
+
             try:
                 sentry_sdk.init(sentry_dsn, traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", 0.5)))
             except Exception as e:
@@ -42,10 +45,10 @@ class TelemetryService:
 
 
     def __log_periodic(self):
-        while(True):
+        while True:
             try:
                 tele = self.registry.get_telemetry()
-            
+
                 current_nodes: NodeList = NodeList.listNode().obj
                 tele.nodes_count = len(current_nodes.items)
 
@@ -56,12 +59,11 @@ class TelemetryService:
                 sleep(self.periodic_time_sec)
             except Exception as e:
                 logging.error(f"Failed to run periodic telemetry update {e}", exc_info=True)
-                pass
 
 
     def __log(self, data: Telemetry):
         r = requests.post(self.endpoint, data=data.json(), headers={'Content-Type': 'application/json'})
-        if(r.status_code != 201):
-            logging.error(f"Failed to log telemetry data")
+        if (r.status_code != 201):
+            logging.error("Failed to log telemetry data")
 
         return r

@@ -35,8 +35,9 @@ class KafkaSink(SinkBase):
         kafka_blocks = [
             block
             for block in enrichment.blocks
-            if (isinstance(block, KubernetesDiffBlock) or isinstance(block, JsonBlock))
+            if isinstance(block, (KubernetesDiffBlock, JsonBlock))
         ]
+
         if not kafka_blocks:  # currently supporting sending kafka sink only diffs
             if len(enrichment.blocks) > 0:
                 logging.warning(

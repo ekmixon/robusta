@@ -24,12 +24,8 @@ class KubeObjFindingSubject(FindingSubject):
     def get_node_name(obj):
         if not obj:
             return None
-        is_node_object = hasattr(obj, "kind") and obj.kind == "Node"
-        if is_node_object:
-            if isinstance(obj, ObjectReference):
-                return obj.name
-
-            return obj.metadata.name
+        if is_node_object := hasattr(obj, "kind") and obj.kind == "Node":
+            return obj.name if isinstance(obj, ObjectReference) else obj.metadata.name
         elif hasattr(obj, "spec") and hasattr(obj.spec, "nodeName"):
             return obj.spec.nodeName
         return None

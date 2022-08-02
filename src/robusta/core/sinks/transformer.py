@@ -13,13 +13,11 @@ class Transformer:
     @staticmethod
     def get_markdown_links(markdown_data: str) -> List[str]:
         regex = "<.*?\\|.*?>"
-        matches = re.findall(regex, markdown_data)
-        links = []
-        if matches:
-            links = [
-                match for match in matches if len(match) > 1
-            ]  # filter out illegal matches
-        return links
+        return (
+            [match for match in matches if len(match) > 1]
+            if (matches := re.findall(regex, markdown_data))
+            else []
+        )
 
     @staticmethod
     def to_github_markdown(markdown_data: str, add_angular_brackets: bool = True) -> str:
@@ -67,10 +65,13 @@ class Transformer:
             elif isinstance(block, JsonBlock):
                 lines.append(block.json_str)
             elif isinstance(block, KubernetesDiffBlock):
-                for diff in block.diffs:
-                    lines.append(
-                        cls.__markdown_to_html(f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}")
+                lines.extend(
+                    cls.__markdown_to_html(
+                        f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}"
                     )
+                    for diff in block.diffs
+                )
+
             elif isinstance(block, HeaderBlock):
                 lines.append(f"<strong>{block.text}</strong>")
             elif isinstance(block, ListBlock):
@@ -96,10 +97,11 @@ class Transformer:
             elif isinstance(block, JsonBlock):
                 lines.append(block.json_str)
             elif isinstance(block, KubernetesDiffBlock):
-                for diff in block.diffs:
-                    lines.append(
-                        f"**{'.'.join(diff.path)}**: {diff.other_value} ==> {diff.value}"
-                    )
+                lines.extend(
+                    f"**{'.'.join(diff.path)}**: {diff.other_value} ==> {diff.value}"
+                    for diff in block.diffs
+                )
+
             elif isinstance(block, HeaderBlock):
                 lines.append(f"**{block.text}**")
             elif isinstance(block, ListBlock):

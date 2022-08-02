@@ -15,8 +15,10 @@ def deployment_status_enricher(event: DeploymentEvent):
         )
         return
 
-    block_list: List[BaseBlock] = []
-    block_list.append(MarkdownBlock("*Deployment status details:*"))
-    for condition in deployment.status.conditions:
-        block_list.append(MarkdownBlock(f"*{condition.reason} -* {condition.message}"))
+    block_list: List[BaseBlock] = [MarkdownBlock("*Deployment status details:*")]
+    block_list.extend(
+        MarkdownBlock(f"*{condition.reason} -* {condition.message}")
+        for condition in deployment.status.conditions
+    )
+
     event.add_enrichment(block_list)

@@ -74,7 +74,7 @@ class TelegramSink(SinkBase):
     @classmethod
     def __is_telegram_text_block(cls, block: BaseBlock) -> bool:
         # enrichments text tables are too big for mobile device
-        return not ( isinstance(block, FileBlock) or isinstance(block, TableBlock) )
+        return not isinstance(block, (FileBlock, TableBlock))
 
     @classmethod
     def __build_telegram_title(cls, title: str, severity: FindingSeverity) -> str:

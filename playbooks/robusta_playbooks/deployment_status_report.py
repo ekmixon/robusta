@@ -48,10 +48,7 @@ def has_matching_diff(
     event: DeploymentChangeEvent, fields_to_monitor: List[str]
 ) -> bool:
     all_diffs = event.obj.diff(event.old_obj)
-    for diff in all_diffs:
-        if is_matching_diff(diff, fields_to_monitor):
-            return True
-    return False
+    return any(is_matching_diff(diff, fields_to_monitor) for diff in all_diffs)
 
 
 @action
@@ -64,9 +61,10 @@ def deployment_status_report(event: DeploymentChangeEvent, action_params: Report
     if event.operation == K8sOperationType.DELETE:
         return
 
-    if event.operation == K8sOperationType.UPDATE:
-        if not has_matching_diff(event, action_params.fields_to_monitor):
-            return
+    if event.operation == K8sOperationType.UPDATE and not has_matching_diff(
+        event, action_params.fields_to_monitor
+    ):
+        return
 
     logging.info(
         f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}"

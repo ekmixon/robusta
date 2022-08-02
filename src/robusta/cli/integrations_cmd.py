@@ -42,8 +42,7 @@ def _get_slack_key_once() -> SlackApiKey:
         f"If your browser does not automatically launch, open the below url:\n{url}"
     )
     typer.launch(url)
-    slack_api_key = wait_for_slack_api_key(id)
-    return slack_api_key
+    return wait_for_slack_api_key(id)
 
 
 def get_slack_key() -> (str, str):

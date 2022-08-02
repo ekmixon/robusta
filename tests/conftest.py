@@ -19,12 +19,15 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
     # set a report attribute for each phase of a call, which can
     # be "setup", "call", "teardown"
-    setattr(item, "report_" + report.when, report)
+    setattr(item, f"report_{report.when}", report)
 
 
 @pytest.fixture
 def slack_channel() -> SlackChannel:
-    if not "PYTEST_SLACK_TOKEN" in os.environ or not "PYTEST_SLACK_CHANNEL" in os.environ:
+    if (
+        "PYTEST_SLACK_TOKEN" not in os.environ
+        or "PYTEST_SLACK_CHANNEL" not in os.environ
+    ):
         pytest.skip("skipping slack tests (missing environment variables)", allow_module_level=True)
 
     return SlackChannel(CONFIG.PYTEST_SLACK_TOKEN, CONFIG.PYTEST_SLACK_CHANNEL)

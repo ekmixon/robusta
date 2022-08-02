@@ -69,4 +69,4 @@ def create_pvc_snapshot(event: ExecutionBaseEvent, params: VolumeSnapshotParams)
             failure=False,
         )
     )
-    event.add_enrichment([MarkdownBlock(f"Successfully created snapshot")])
+    event.add_enrichment([MarkdownBlock("Successfully created snapshot")])

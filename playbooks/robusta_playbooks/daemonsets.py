@@ -121,8 +121,9 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
     # if the daemonset was configured with an appropriate toleration, this false alarm isn't possible
     if does_daemonset_have_toleration(ds, "ToBeDeletedByClusterAutoscaler"):
         logging.info(
-            f"daemonset is configured properly, so we don't have the known mismatch false alarm"
+            "daemonset is configured properly, so we don't have the known mismatch false alarm"
         )
+
         return False
 
     nodes_by_name = {n.metadata.name: n for n in NodeList.listNode().obj.items}
@@ -141,8 +142,9 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
         relevant_node: Node = nodes_by_name[pod.spec.nodeName]
         if does_node_have_taint(relevant_node, "ToBeDeletedByClusterAutoscaler"):
             logging.info(
-                f"we found a cluster being deleted by the autoscaler - we have the known mismatch false alert"
+                "we found a cluster being deleted by the autoscaler - we have the known mismatch false alert"
             )
+
             return True
 
     return False

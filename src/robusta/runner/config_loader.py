@@ -104,10 +104,10 @@ class ConfigLoader:
 
     @classmethod
     def __get_package_name(cls, local_path) -> str:
-        package_name = get_package_name(local_path)
-        if not package_name:
+        if package_name := get_package_name(local_path):
+            return package_name
+        else:
             raise Exception(f"Illegal playbooks package {local_path}. Package name not found")
-        return package_name
 
     def __load_playbooks_repos(
         self,
@@ -189,10 +189,12 @@ class ConfigLoader:
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards
-                playbook_repos: Dict[str, PlaybookRepo] = {}
-                playbook_repos[
-                    "robusta.core.playbooks.internal"
-                ] = PlaybookRepo(url=INTERNAL_PLAYBOOKS_ROOT, pip_install=False)
+                playbook_repos: Dict[str, PlaybookRepo] = {
+                    "robusta.core.playbooks.internal": PlaybookRepo(
+                        url=INTERNAL_PLAYBOOKS_ROOT, pip_install=False
+                    )
+                }
+
                 # order matters! Loading the default first, allows overriding it if adding package with the same name
                 # since python 3.7, iteration order is identical to insertion order, if dict didn't change
                 # default playbooks
@@ -238,7 +240,10 @@ class ConfigLoader:
 
                 self.__reload_receiver()
             except Exception as e:
-                logging.error(f"unknown error reloading playbooks. will try again when they next change", exc_info=True)
+                logging.error(
+                    "unknown error reloading playbooks. will try again when they next change",
+                    exc_info=True,
+                )
 
     @classmethod
     def __prepare_runtime_config(

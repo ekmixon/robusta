@@ -58,8 +58,7 @@ def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
 
     for path in containers_paths:
         try:
-            containers = k8s_obj.object_at_path(path)
-            if containers:
+            if containers := k8s_obj.object_at_path(path):
                 return get_images(containers)
         except Exception:  # Path not found on object, not a real error
             pass
@@ -221,10 +220,7 @@ class RobustaPod(Pod):
         return get_images(self.spec.containers)
 
     def has_direct_owner(self, owner_uid) -> bool:
-        for owner in self.metadata.ownerReferences:
-            if owner.uid == owner_uid:
-                return True
-        return False
+        return any(owner.uid == owner_uid for owner in self.metadata.ownerReferences)
 
     def has_toleration(self, toleration_key):
         return any(
@@ -232,10 +228,10 @@ class RobustaPod(Pod):
         )
 
     def has_cpu_limit(self) -> bool:
-        for container in self.spec.containers:
-            if container.resources and container.resources.limits.get("cpu"):
-                return True
-        return False
+        return any(
+            container.resources and container.resources.limits.get("cpu")
+            for container in self.spec.containers
+        )
 
     def upload_file(self, path: str, contents: bytes, container: Optional[str] = None):
         if container is None:

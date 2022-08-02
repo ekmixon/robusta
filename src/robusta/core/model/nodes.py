@@ -75,7 +75,9 @@ class PodRequests(BaseModel):
         if len(mem_spec) > 1 and mem_spec[-1] in k8s_memory_factors:
             return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
 
-        raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
+        raise Exception(
+            f"number of bytes could not be extracted from memory spec: {mem_spec}"
+        )
 
 
 class NodePodsRequests(BaseModel):

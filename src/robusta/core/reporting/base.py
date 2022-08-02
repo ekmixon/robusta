@@ -55,10 +55,10 @@ class Filterable:
             logging.warning(f"Invalid match attributes: {invalid_attributes}")
             return False
 
-        for attribute, expression in requirements.items():
-            if not self.attribute_matches(attribute, expression):
-                return False
-        return True
+        return all(
+            self.attribute_matches(attribute, expression)
+            for attribute, expression in requirements.items()
+        )
 
 
 class FindingSubject:

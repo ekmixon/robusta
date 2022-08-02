@@ -11,7 +11,7 @@ def doublewrap(f):
 
     @wraps(f)
     def new_dec(*args, **kwargs):
-        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
+        if len(args) == 1 and not kwargs and callable(args[0]):
             # actual decorated function
             return f(args[0])
         else:

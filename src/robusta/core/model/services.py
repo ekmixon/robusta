@@ -12,13 +12,14 @@ class ServiceInfo(BaseModel):
         return f"{self.namespace}/{self.service_type}/{self.name}"
 
     def __eq__(self, other):
-        if not isinstance(other, ServiceInfo):
-            return NotImplemented
-
         return (
-            self.name == other.name
-            and self.service_type == other.service_type
-            and self.namespace == other.namespace
-            and self.classification == other.classification
-            and self.deleted == other.deleted
+            (
+                self.name == other.name
+                and self.service_type == other.service_type
+                and self.namespace == other.namespace
+                and self.classification == other.classification
+                and self.deleted == other.deleted
+            )
+            if isinstance(other, ServiceInfo)
+            else NotImplemented
         )

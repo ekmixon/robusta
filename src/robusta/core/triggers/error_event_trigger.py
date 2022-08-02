@@ -56,17 +56,13 @@ class WarningEventTrigger(EventAllChangesTrigger):
 
         # Perform a rate limit for this service key according to the rate_limit parameter
         name = exec_event.obj.involvedObject.name
-        namespace = (
-            exec_event.obj.involvedObject.namespace
-            if exec_event.obj.involvedObject.namespace
-            else ""
-        )
+        namespace = exec_event.obj.involvedObject.namespace or ""
         service_key = TopServiceResolver.guess_service_key(
             name=name, namespace=namespace
         )
         return RateLimiter.mark_and_test(
             f"WarningEventTrigger_{playbook_id}_{exec_event.obj.reason}",
-            service_key if service_key else namespace + ":" + name,
+            service_key or f"{namespace}:{name}",
             self.rate_limit,
         )
 

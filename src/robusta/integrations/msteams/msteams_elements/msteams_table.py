@@ -16,7 +16,7 @@ class MsTeamsTable(MsTeamsBase):
         column_element = MsTeamsColumn()
         for index in range(len(headers)):
             single_column = [MsTeamsTextBlock(text=headers[index], weight="bolder")]
-            single_column = single_column + self.__create_single_column_list(rows=rows, index=index)
+            single_column += self.__create_single_column_list(rows=rows, index=index)
             column_element.add_column(items=single_column, width_stretch=True)
 
         return column_element

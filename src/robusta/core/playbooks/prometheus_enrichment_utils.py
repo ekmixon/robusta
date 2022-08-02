@@ -12,20 +12,17 @@ import humanize
 
 
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
-    labels = defaultdict(lambda: "<missing>")
-    labels.update(provided_labels)
+    labels = defaultdict(lambda: "<missing>") | provided_labels
     template = Template(promql_query_template)
-    promql_query = template.safe_substitute(labels)
-    return promql_query
+    return template.safe_substitute(labels)
 
 
 def get_node_internal_ip(node: Node) -> str:
-    internal_ip = next(
+    return next(
         addr.address
         for addr in node.status.addresses
         if addr.type == "InternalIP"
     )
-    return internal_ip
 
 
 def create_chart_from_prometheus_query(
@@ -74,16 +71,13 @@ def create_chart_from_prometheus_query(
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
         ChartValuesFormat.Percentage: lambda val: f'{(100*val):.1f}%'
     }
-    chart_values_format = values_format if values_format else ChartValuesFormat.Plain
+    chart_values_format = values_format or ChartValuesFormat.Plain
     chart.value_formatter = value_formatters[chart_values_format]
 
-    if chart_title:
-        chart.title = chart_title
-    else:
-        chart.title = promql_query
+    chart.title = chart_title or promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     for series in result:
-        label = "\n".join([v for v in series["metric"].values()])
+        label = "\n".join(list(series["metric"].values()))
         values = [
             (timestamp, round(float(val), FLOAT_PRECISION_LIMIT))
             for (timestamp, val) in series["values"]
@@ -110,7 +104,7 @@ def create_graph_enrichment(
         chart_title=graph_title,
         values_format=chart_values_format
     )
-    chart_name = graph_title if graph_title else promql_query
+    chart_name = graph_title or promql_query
     svg_name = f"{chart_name}.svg"
     return FileBlock(svg_name, chart.render())
 
@@ -152,13 +146,12 @@ def create_resource_enrichment(
     if not chosen_combination:
         raise AttributeError(f'The following combination for resource chart is not supported: {combination}')
     values_format_text = 'Utilization' if chosen_combination.values_format == ChartValuesFormat.Percentage else 'Usage'
-    graph_enrichment = create_graph_enrichment(
+    return create_graph_enrichment(
         starts_at,
         labels,
         chosen_combination.query,
         prometheus_url=prometheus_url,
         graph_duration_minutes=graph_duration_minutes,
         graph_title=f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}',
-        chart_values_format=chosen_combination.values_format
+        chart_values_format=chosen_combination.values_format,
     )
-    return graph_enrichment

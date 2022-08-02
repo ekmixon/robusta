@@ -46,23 +46,39 @@ class ProcessFinder:
             return self.get_exact_match()
         elif len(self.matching_processes) == 0:
             finding.add_enrichment(
-                [MarkdownBlock(f"No matching processes. The processes in the pod are:")]
-                + self.__get_error_blocks(
-                    self.all_processes, retrigger_text, retrigger_action, debug_action
+                (
+                    [
+                        MarkdownBlock(
+                            "No matching processes. The processes in the pod are:"
+                        )
+                    ]
+                    + self.__get_error_blocks(
+                        self.all_processes,
+                        retrigger_text,
+                        retrigger_action,
+                        debug_action,
+                    )
                 )
             )
+
             return None
         elif len(self.matching_processes) > 1:
             finding.add_enrichment(
-                [
-                    MarkdownBlock(
-                        f"More than one matching process. The matching processes are:"
+                (
+                    [
+                        MarkdownBlock(
+                            "More than one matching process. The matching processes are:"
+                        )
+                    ]
+                    + self.__get_error_blocks(
+                        self.matching_processes,
+                        retrigger_text,
+                        retrigger_action,
+                        debug_action,
                     )
-                ]
-                + self.__get_error_blocks(
-                    self.matching_processes, retrigger_text, retrigger_action, debug_action
                 )
             )
+
             return None
 
     def has_exactly_one_match(self) -> bool:
@@ -81,7 +97,7 @@ class ProcessFinder:
         """
          Returns the lowest pid which is most likely the parent process
         """
-        return min([p.pid for p in self.matching_processes])
+        return min(p.pid for p in self.matching_processes)
 
     def get_exact_match(self) -> Process:
         """
@@ -108,10 +124,7 @@ class ProcessFinder:
                 and filters.process_substring in " ".join(p.cmdline)
             ]
 
-        if filters.pid not in pid_to_process:
-            return []
-
-        return [pid_to_process[filters.pid]]
+        return [pid_to_process[filters.pid]] if filters.pid in pid_to_process else []
 
     def __get_error_blocks(
         self, processes: List[Process], text: str, action: Callable, debug_action: Callable
@@ -133,11 +146,12 @@ class ProcessFinder:
                     action_params=updated_params,
                     kubernetes_object=self.pod,
                 )
-            choices[f"Still can't choose?"] = CallbackChoice(
+            choices["Still can't choose?"] = CallbackChoice(
                 action=debug_action,
                 action_params=self.filters,
                 kubernetes_object=self.pod,
             )
+
             blocks.append(CallbackBlock(choices))
             blocks.append(
                 MarkdownBlock(

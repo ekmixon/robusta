@@ -97,17 +97,15 @@ class PrometheusKubernetesAlert(
         Gets the prometheus query that defines this alert.
         """
         url = urlparse(self.alert.generatorURL)
-        return re.match(r"g0.expr=(.*)&g0.tab=1", unquote_plus(url.query)).group(1)
+        return re.match(r"g0.expr=(.*)&g0.tab=1", unquote_plus(url.query))[1]
 
     def get_description(self) -> str:
         annotations = self.alert.annotations
-        clean_description = ""
-        if annotations.get("description"):
-            # remove "LABELS = map[...]" from the description as we already add a TableBlock with labels
-            clean_description = re.sub(
-                r"LABELS = map\[.*\]$", "", annotations["description"]
-            )
-        return clean_description
+        return (
+            re.sub(r"LABELS = map\[.*\]$", "", annotations["description"])
+            if annotations.get("description")
+            else ""
+        )
 
     def __get_alert_subject(self) -> FindingSubject:
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE

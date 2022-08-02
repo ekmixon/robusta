@@ -59,21 +59,20 @@ class DataDogSink(SinkBase):
             elif isinstance(block, JsonBlock):
                 lines.append(block.json_str)
             elif isinstance(block, KubernetesDiffBlock):
-                for diff in block.diffs:
-                    lines.append(
-                        f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}"
-                    )
+                lines.extend(
+                    f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}"
+                    for diff in block.diffs
+                )
+
             elif isinstance(block, FileBlock):
                 last_dot_idx = block.filename.rindex(".")
                 file_type = block.filename[last_dot_idx + 1 :]
                 if file_type == "txt":
-                    lines.append(block.filename)
-                    lines.append("------------------")
+                    lines.extend((block.filename, "------------------"))
                     lines.extend(str(block.contents).split("\n"))
                     lines.append("------------------")
             elif isinstance(block, HeaderBlock):
-                lines.append(block.text)
-                lines.append("------------------")
+                lines.extend((block.text, "------------------"))
             elif isinstance(block, ListBlock):
                 lines.extend(block.items)
             elif isinstance(block, TableBlock):
@@ -95,7 +94,7 @@ class DataDogSink(SinkBase):
     @staticmethod
     def __trim_str(text: str, size_limit: int) -> str:
         if len(text) >= size_limit:
-            text = text[:size_limit] + "..."
+            text = f"{text[:size_limit]}..."
         return text
 
     def write_finding(self, finding: Finding, platform_enabled: bool):

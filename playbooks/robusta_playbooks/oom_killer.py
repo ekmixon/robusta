@@ -140,10 +140,7 @@ class OomKillsExtractor:
             seconds=self.config.new_oom_kills_duration_in_sec
         )
 
-        containers_spec_by_name = {}
-        for c in pod.spec.containers:
-            containers_spec_by_name[c.name] = c
-
+        containers_spec_by_name = {c.name: c for c in pod.spec.containers}
         oom_kills: List[OomKill] = []
         for c_status in pod.status.containerStatuses:
             # Ignore pods that were not oom killed
@@ -186,27 +183,27 @@ class OomKillsExtractor:
             return c_status.state
 
         # Check if the container OOMKilled by inspecting the lastState field
-        if self.is_last_state_in_oom_status(c_status):
-            return c_status.state
-
-        # OOMKilled state not found
-        return None
+        return c_status.state if self.is_last_state_in_oom_status(c_status) else None
 
     @staticmethod
     def is_state_in_oom_status(status: ContainerStatus):
         if not status.state:
             return False
-        if not status.state.terminated:
-            return False
-        return status.state.terminated.reason == "OOMKilled"
+        return (
+            status.state.terminated.reason == "OOMKilled"
+            if status.state.terminated
+            else False
+        )
 
     @staticmethod
     def is_last_state_in_oom_status(status: ContainerStatus):
         if not status.lastState:
             return False
-        if not status.lastState.terminated:
-            return False
-        return status.lastState.terminated.reason == "OOMKilled"
+        return (
+            status.lastState.terminated.reason == "OOMKilled"
+            if status.lastState.terminated
+            else False
+        )
 
     @staticmethod
     def get_memory_specs(resources: Optional[ResourceRequirements]) -> MemorySpecs:
@@ -246,10 +243,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
             self.node_reason = self.get_busy_node_reason()
             self.node_reason_calculated = True
 
-        if self.node_reason is not None:
-            return self.node_reason
-
-        return f"reason not found"
+        return self.node_reason if self.node_reason is not None else "reason not found"
 
     def get_busy_container_reason(self, oom_kill: OomKill):
         duration = timedelta(seconds=self.config.metrics_duration_in_secs)
@@ -281,8 +275,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
         if used_memory_percentage < CONTAINER_MEMORY_THRESHOLD:
             return None
 
-        reason = f"container used too much memory: reached {used_memory_percentage} percentage of its specified limit"
-        return reason
+        return f"container used too much memory: reached {used_memory_percentage} percentage of its specified limit"
 
     def get_busy_node_reason(self) -> Optional[str]:
         duration = timedelta(seconds=self.config.metrics_duration_in_secs)
@@ -299,5 +292,4 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
         if node_max_used_memory_in_percentage < NODE_MEMORY_THRESHOLD:
             return None
 
-        reason = f"node {node_name} used too much memory: reached {node_max_used_memory_in_percentage} percentage of its available memory"
-        return reason
+        return f"node {node_name} used too much memory: reached {node_max_used_memory_in_percentage} percentage of its available memory"

@@ -32,8 +32,9 @@ class ExternalActionRequestBuilder(BaseModel):
 
         if not signing_key:
             raise Exception(
-                f"Cannot create callback request with no signing key. Configure signing_key in globalConfig"
+                "Cannot create callback request with no signing key. Configure signing_key in globalConfig"
             )
+
         action_params = (
             {} if choice.action_params is None else choice.action_params.dict()
         )

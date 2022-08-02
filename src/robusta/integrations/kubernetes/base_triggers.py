@@ -66,7 +66,7 @@ class K8sBaseTrigger(BaseTrigger):
 
         k8s_trigger_event = K8sTriggerEvent(**event.dict())
         k8s_payload = k8s_trigger_event.k8s_payload
-        if self.kind != "Any" and self.kind != k8s_payload.kind:
+        if self.kind not in ["Any", k8s_payload.kind]:
             return False
 
         if not exact_match(self.operation, K8sOperationType(k8s_payload.operation)):
@@ -79,8 +79,7 @@ class K8sBaseTrigger(BaseTrigger):
         if not prefix_match(self.namespace_prefix, meta.get("namespace", "")):
             return False
 
-        labels_map = getattr(self, "_labels_map", None)
-        if labels_map:
+        if labels_map := getattr(self, "_labels_map", None):
             obj_labels = meta.get("labels", {})
             for label_key, label_value in labels_map.items():
                 if label_value != obj_labels.get(label_key, ""):

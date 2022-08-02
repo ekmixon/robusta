@@ -15,16 +15,15 @@ class MsTeamsAdaptiveCardFilesImage:
 
     @classmethod
     def create_files_for_presentation(cls, file_blocks: List[FileBlock]) -> map:
-        encoded_images = []
         image_file_blocks = [file_block for file_block in file_blocks if is_image(file_block.filename)]
-        for image_file_block in image_file_blocks:
-            encoded_images.append(
-                cls.__convert_bytes_to_base_64_url(image_file_block.filename, image_file_block.contents)
+        encoded_images = [
+            cls.__convert_bytes_to_base_64_url(
+                image_file_block.filename, image_file_block.contents
             )
+            for image_file_block in image_file_blocks
+        ]
 
-        if len(encoded_images) == 0:
-            return []
-        return MsTeamsImages(encoded_images)
+        return MsTeamsImages(encoded_images) if encoded_images else []
 
     @classmethod
     def __get_tmp_file_path(cls):

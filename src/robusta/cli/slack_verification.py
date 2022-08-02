@@ -47,9 +47,10 @@ def verify_slack_channel(
         if debug:
             typer.secho(traceback.format_exc())
     typer.secho(
-        f"There was an unknown exception setting up Slack, please contact Robusta support.",
+        "There was an unknown exception setting up Slack, please contact Robusta support.",
         fg=typer.colors.RED,
     )
+
     return False
 
 

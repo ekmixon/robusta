@@ -47,27 +47,26 @@ class SlackSender:
         if choices is None:
             return []
 
-        buttons = []
-        for (i, (text, callback_choice)) in enumerate(choices.items()):
-            buttons.append(
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": text,
-                    },
-                    "style": "primary",
-                    "action_id": f"{ACTION_TRIGGER_PLAYBOOK}_{i}",
-                    "value": ExternalActionRequestBuilder.create_for_func(
-                        callback_choice,
-                        sink,
-                        text,
-                        self.account_id,
-                        self.cluster_name,
-                        self.signing_key,
-                    ).json(),
-                }
-            )
+        buttons = [
+            {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": text,
+                },
+                "style": "primary",
+                "action_id": f"{ACTION_TRIGGER_PLAYBOOK}_{i}",
+                "value": ExternalActionRequestBuilder.create_for_func(
+                    callback_choice,
+                    sink,
+                    text,
+                    self.account_id,
+                    self.cluster_name,
+                    self.signing_key,
+                ).json(),
+            }
+            for i, (text, callback_choice) in enumerate(choices.items())
+        ]
 
         return [{"type": "actions", "elements": buttons}]
 
@@ -102,17 +101,20 @@ class SlackSender:
 
     def __to_slack(self, block: BaseBlock, sink_name: str) -> List[SlackBlock]:
         if isinstance(block, MarkdownBlock):
-            if not block.text:
-                return []
-            return [
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": SlackSender.__apply_length_limit(block.text),
-                    },
-                }
-            ]
+            return (
+                [
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": SlackSender.__apply_length_limit(block.text),
+                        },
+                    }
+                ]
+                if block.text
+                else []
+            )
+
         elif isinstance(block, DividerBlock):
             return [{"type": "divider"}]
         elif isinstance(block, FileBlock):
@@ -128,7 +130,7 @@ class SlackSender:
                     },
                 }
             ]
-        elif isinstance(block, ListBlock) or isinstance(block, TableBlock):
+        elif isinstance(block, (ListBlock, TableBlock)):
             return self.__to_slack(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_slack_diff(block, sink_name)

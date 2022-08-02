@@ -91,7 +91,7 @@ def example_from_schema(schema):
         # Combine schema examples
         example = {}
         for sub_schema in schema["allOf"]:
-            example.update(example_from_schema(sub_schema))
+            example |= example_from_schema(sub_schema)
         return example
 
     elif "enum" in schema:
@@ -147,12 +147,11 @@ def example_from_schema(schema):
         assert 0 <= min_length <= max_length
         if min_length <= len(example_string) <= max_length:
             return example_string
-        else:
-            example_builder = StringIO()
-            for i in range(gen_length):
-                example_builder.write(example_string[i % len(example_string)])
-            example_builder.seek(0)
-            return example_builder.read()
+        example_builder = StringIO()
+        for i in range(gen_length):
+            example_builder.write(example_string[i % len(example_string)])
+        example_builder.seek(0)
+        return example_builder.read()
 
     elif schema["type"] in ("integer", "number"):
         example = _DEFAULT_EXAMPLES[schema["type"]]

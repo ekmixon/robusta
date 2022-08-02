@@ -41,9 +41,7 @@ def get_runner_pod(namespace: str) -> Optional[str]:
         return None
 
     lines = text.split("\n")
-    if len(lines) < 2:
-        return None
-    return lines[1].split(" ")[0]
+    return None if len(lines) < 2 else lines[1].split(" ")[0]
 
 
 def __validate_playbooks_dir(playbooks_dir: str) -> bool:
@@ -186,7 +184,7 @@ def list_dirs(
     ),
 ):
     """List stored playbooks directories"""
-    log_title(f"Listing playbooks directories ")
+    log_title("Listing playbooks directories ")
 
     try:
         runner_pod = get_runner_pod(namespace)
@@ -243,8 +241,7 @@ def delete(
 
 def print_yaml_if_not_none(key: str, json_dict: dict):
     if json_dict.get(key):
-        json = {}
-        json[key] = json_dict.get(key)
+        json = {key: json_dict.get(key)}
         typer.echo(f"{yaml.dump(json)}")
 
 
@@ -254,16 +251,16 @@ def list_(
         None,
         help=NAMESPACE_EXPLANATION,
     ),
-):  # not named list as that would shadow the builtin list function
+):    # not named list as that would shadow the builtin list function
     """list current active playbooks"""
-    typer.echo(f"Getting deployed playbooks list...")
+    typer.echo("Getting deployed playbooks list...")
     with click_spinner.spinner():
         playbooks_config = get_playbooks_config(namespace)
 
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     active_playbooks_yaml = yaml.safe_load(active_playbooks_file)
     for playbook in active_playbooks_yaml["active_playbooks"]:
-        typer.secho(f"--------------------------------------", fg="blue")
+        typer.secho("--------------------------------------", fg="blue")
         print_yaml_if_not_none("sinks", playbook)
         print_yaml_if_not_none("triggers", playbook)
         print_yaml_if_not_none("actions", playbook)
